@@ -6,8 +6,27 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		992185BF2FA5046B00B19B33 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992185BE2FA5046B00B19B33 /* ContentView.swift */; };
+		992185CC2FA508FE00B19B33 /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992185CB2FA5083500B19B33 /* Item.swift */; };
+		992185D12FA50A0D00B19B33 /* AddItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992185D02FA50A0800B19B33 /* AddItemView.swift */; };
+		992185D32FA50E3300B19B33 /* EditItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992185D22FA50E3000B19B33 /* EditItemView.swift */; };
+		992185D92FA51A2200B19B33 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 992185D82FA51A2200B19B33 /* FirebaseFirestore */; };
+		992185DB2FA51A2700B19B33 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 992185DA2FA51A2700B19B33 /* FirebaseAuth */; };
+		992185DE2FA51C5900B19B33 /* FirestoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992185DD2FA51B6B00B19B33 /* FirestoreService.swift */; };
+		992185E02FA5223500B19B33 /* AssistantView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992185DF2FA5222D00B19B33 /* AssistantView.swift */; };
+		992185E32FA524EF00B19B33 /* AssistantViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992185E22FA5227200B19B33 /* AssistantViewModel.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		992185B92FA5046B00B19B33 /* CafeManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CafeManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		992185BE2FA5046B00B19B33 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		992185CB2FA5083500B19B33 /* Item.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
+		992185D02FA50A0800B19B33 /* AddItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddItemView.swift; sourceTree = "<group>"; };
+		992185D22FA50E3000B19B33 /* EditItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditItemView.swift; sourceTree = "<group>"; };
+		992185DD2FA51B6B00B19B33 /* FirestoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirestoreService.swift; sourceTree = "<group>"; };
+		992185DF2FA5222D00B19B33 /* AssistantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantView.swift; sourceTree = "<group>"; };
+		992185E22FA5227200B19B33 /* AssistantViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -23,6 +42,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				992185D92FA51A2200B19B33 /* FirebaseFirestore in Frameworks */,
+				992185DB2FA51A2700B19B33 /* FirebaseAuth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -32,7 +53,12 @@
 		992185B02FA5046B00B19B33 = {
 			isa = PBXGroup;
 			children = (
+				992185E12FA5226700B19B33 /* ViewModels */,
+				992185DC2FA51B2200B19B33 /* Services */,
+				992185CD2FA509C500B19B33 /* Views */,
+				992185C92FA5067600B19B33 /* models */,
 				992185BB2FA5046B00B19B33 /* CafeManager */,
+				992185D72FA51A0000B19B33 /* Frameworks */,
 				992185BA2FA5046B00B19B33 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -43,6 +69,48 @@
 				992185B92FA5046B00B19B33 /* CafeManager.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		992185C92FA5067600B19B33 /* models */ = {
+			isa = PBXGroup;
+			children = (
+				992185CB2FA5083500B19B33 /* Item.swift */,
+			);
+			path = models;
+			sourceTree = "<group>";
+		};
+		992185CD2FA509C500B19B33 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				992185DF2FA5222D00B19B33 /* AssistantView.swift */,
+				992185D22FA50E3000B19B33 /* EditItemView.swift */,
+				992185D02FA50A0800B19B33 /* AddItemView.swift */,
+				992185BE2FA5046B00B19B33 /* ContentView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		992185D72FA51A0000B19B33 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		992185DC2FA51B2200B19B33 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				992185DD2FA51B6B00B19B33 /* FirestoreService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		992185E12FA5226700B19B33 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				992185E22FA5227200B19B33 /* AssistantViewModel.swift */,
+			);
+			path = ViewModels;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -65,6 +133,8 @@
 			);
 			name = CafeManager;
 			packageProductDependencies = (
+				992185D82FA51A2200B19B33 /* FirebaseFirestore */,
+				992185DA2FA51A2700B19B33 /* FirebaseAuth */,
 			);
 			productName = CafeManager;
 			productReference = 992185B92FA5046B00B19B33 /* CafeManager.app */;
@@ -94,6 +164,9 @@
 			);
 			mainGroup = 992185B02FA5046B00B19B33;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				992185D62FA5121200B19B33 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 992185BA2FA5046B00B19B33 /* Products */;
 			projectDirPath = "";
@@ -119,6 +192,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				992185BF2FA5046B00B19B33 /* ContentView.swift in Sources */,
+				992185E32FA524EF00B19B33 /* AssistantViewModel.swift in Sources */,
+				992185DE2FA51C5900B19B33 /* FirestoreService.swift in Sources */,
+				992185CC2FA508FE00B19B33 /* Item.swift in Sources */,
+				992185E02FA5223500B19B33 /* AssistantView.swift in Sources */,
+				992185D32FA50E3300B19B33 /* EditItemView.swift in Sources */,
+				992185D12FA50A0D00B19B33 /* AddItemView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -351,6 +431,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		992185D62FA5121200B19B33 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.12.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		992185D82FA51A2200B19B33 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 992185D62FA5121200B19B33 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		992185DA2FA51A2700B19B33 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 992185D62FA5121200B19B33 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 992185B12FA5046B00B19B33 /* Project object */;
 }
