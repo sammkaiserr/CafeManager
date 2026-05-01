@@ -1,5 +1,8 @@
 import Combine
 import Foundation
+#if canImport(FoundationModels)
+import FoundationModels
+#endif
 
 struct AssistantInsight: Identifiable {
     let id: String
@@ -15,6 +18,10 @@ enum InsightSeverity {
 }
 
 final class AssistantViewModel: ObservableObject {
+    @Published private(set) var aiBriefing: String?
+    @Published private(set) var assistantStatus: String?
+    @Published private(set) var isGenerating = false
+
     func insights(for items: [Item]) -> [AssistantInsight] {
         guard !items.isEmpty else {
             return []
@@ -80,4 +87,112 @@ final class AssistantViewModel: ObservableObject {
     private func stockGap(for item: Item) -> Int {
         max(item.threshold - item.quantity, 0)
     }
+
+    @MainActor
+    func refreshBriefing(for items: [Item]) async {
+        guard !items.isEmpty else {
+            aiBriefing = nil
+            assistantStatus = nil
+            isGenerating = false
+            return
+        }
+
+        #if canImport(FoundationModels)
+        if #available(iOS 26.0, macOS 26.0, *) {
+            let model = SystemLanguageModel.default
+            switch model.availability {
+            case .available:
+                await generateBriefing(for: items)
+            case .unavailable(let reason):
+                aiBriefing = nil
+                assistantStatus = statusMessage(for: reason)
+                isGenerating = false
+            }
+        } else {
+            aiBriefing = nil
+            assistantStatus = "AI briefing needs a newer OS version."
+            isGenerating = false
+        }
+        #else
+        aiBriefing = nil
+        assistantStatus = "Foundation Models is unavailable in this build."
+        isGenerating = false
+        #endif
+    }
 }
+#if canImport(FoundationModels)
+@available(iOS 26.0, macOS 26.0, *)
+private extension AssistantViewModel {
+    func generateBriefing(for items: [Item]) async {
+        isGenerating = true
+        assistantStatus = nil
+
+        let prompt = inventoryPrompt(for: items)
+        let session = LanguageModelSession(
+            model: .default,
+            instructions: """
+            You are an operations assistant for a cafe manager.
+            Review inventory data and produce a short action briefing.
+            Focus on what needs attention first, what can be bundled into one supplier run, and any configuration issues.
+            Do not invent sales rates, dates, supplier names, or missing facts.
+            Keep the response under 90 words and use plain English.
+            """
+        )
+
+        do {
+            let response = try await session.respond(
+                to: prompt,
+                options: GenerationOptions(temperature: 0.2)
+            )
+            aiBriefing = response.content.trimmingCharacters(in: .whitespacesAndNewlines)
+        } catch {
+            aiBriefing = nil
+            assistantStatus = errorMessage(for: error)
+        }
+
+        isGenerating = false
+    }
+
+    func inventoryPrompt(for items: [Item]) -> String {
+        let lines = items
+            .sorted { stockGap(for: $0) > stockGap(for: $1) }
+            .map { item in
+                "\(item.name): quantity \(item.quantity), threshold \(item.threshold)"
+            }
+            .joined(separator: "\n")
+
+        return """
+        Build an inventory briefing for this cafe.
+        Inventory records:
+        \(lines)
+        """
+    }
+
+    func statusMessage(for availability: SystemLanguageModel.Availability.UnavailableReason) -> String {
+        switch availability {
+        case .deviceNotEligible:
+            return "AI briefing is unavailable on this device."
+        case .appleIntelligenceNotEnabled:
+            return "Turn on Apple Intelligence to generate an AI inventory briefing."
+        case .modelNotReady:
+            return "The on-device model is still getting ready. Inventory signals are shown below in the meantime."
+        @unknown default:
+            return "AI briefing is unavailable right now."
+        }
+    }
+
+    func errorMessage(for error: Error) -> String {
+        if let generationError = error as? LanguageModelSession.GenerationError {
+            switch generationError {
+            case .unsupportedLanguageOrLocale:
+                return "The AI model could not process this inventory briefing language."
+            default:
+                return "The AI briefing could not be generated right now."
+            }
+        }
+
+        return "The AI briefing could not be generated right now."
+    }
+}
+#endif
+

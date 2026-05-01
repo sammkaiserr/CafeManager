@@ -16,6 +16,8 @@
 		992185DE2FA51C5900B19B33 /* FirestoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992185DD2FA51B6B00B19B33 /* FirestoreService.swift */; };
 		992185E02FA5223500B19B33 /* AssistantView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992185DF2FA5222D00B19B33 /* AssistantView.swift */; };
 		992185E32FA524EF00B19B33 /* AssistantViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992185E22FA5227200B19B33 /* AssistantViewModel.swift */; };
+		992185E52FA52DD700B19B33 /* TakeOrderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992185E42FA52DD700B19B33 /* TakeOrderView.swift */; };
+		992185E72FA52DD800B19B33 /* OrderSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 992185E62FA52DD800B19B33 /* OrderSelection.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +29,8 @@
 		992185DD2FA51B6B00B19B33 /* FirestoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirestoreService.swift; sourceTree = "<group>"; };
 		992185DF2FA5222D00B19B33 /* AssistantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantView.swift; sourceTree = "<group>"; };
 		992185E22FA5227200B19B33 /* AssistantViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantViewModel.swift; sourceTree = "<group>"; };
+		992185E42FA52DD700B19B33 /* TakeOrderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TakeOrderView.swift; sourceTree = "<group>"; };
+		992185E62FA52DD800B19B33 /* OrderSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderSelection.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -75,6 +79,7 @@
 			isa = PBXGroup;
 			children = (
 				992185CB2FA5083500B19B33 /* Item.swift */,
+				992185E62FA52DD800B19B33 /* OrderSelection.swift */,
 			);
 			path = models;
 			sourceTree = "<group>";
@@ -86,6 +91,7 @@
 				992185D22FA50E3000B19B33 /* EditItemView.swift */,
 				992185D02FA50A0800B19B33 /* AddItemView.swift */,
 				992185BE2FA5046B00B19B33 /* ContentView.swift */,
+				992185E42FA52DD700B19B33 /* TakeOrderView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -194,8 +200,10 @@
 			files = (
 				992185BF2FA5046B00B19B33 /* ContentView.swift in Sources */,
 				992185E32FA524EF00B19B33 /* AssistantViewModel.swift in Sources */,
+				992185E52FA52DD700B19B33 /* TakeOrderView.swift in Sources */,
 				992185DE2FA51C5900B19B33 /* FirestoreService.swift in Sources */,
 				992185CC2FA508FE00B19B33 /* Item.swift in Sources */,
+				992185E72FA52DD800B19B33 /* OrderSelection.swift in Sources */,
 				992185E02FA5223500B19B33 /* AssistantView.swift in Sources */,
 				992185D32FA50E3300B19B33 /* EditItemView.swift in Sources */,
 				992185D12FA50A0D00B19B33 /* AddItemView.swift in Sources */,
