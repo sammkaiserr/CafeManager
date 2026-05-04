@@ -2,18 +2,27 @@ import SwiftUI
 
 struct AssistantView: View {
     var items: [Item]
+    var orders: [CafeOrder]
     @StateObject private var viewModel = AssistantViewModel()
 
     private var refreshKey: String {
-        items
+        let itemKey = items
             .sorted { $0.id < $1.id }
             .map { "\($0.id)-\($0.quantity)-\($0.threshold)" }
             .joined(separator: "|")
+        let orderKey = orders
+            .sorted { $0.id < $1.id }
+            .map { order in
+                "\(order.id)-\(order.items.map(\.quantity).reduce(0, +))"
+            }
+            .joined(separator: "|")
+
+        return "\(itemKey)#\(orderKey)"
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            let insights = viewModel.insights(for: items)
+            let insights = viewModel.insights(for: items, orders: orders)
 
             Text("Smart Assistant")
                 .font(.title2)
@@ -65,7 +74,7 @@ struct AssistantView: View {
         .background(Color(.systemGray6))
         .cornerRadius(12)
         .task(id: refreshKey) {
-            await viewModel.refreshBriefing(for: items)
+            await viewModel.refreshBriefing(for: items, orders: orders)
         }
     }
 

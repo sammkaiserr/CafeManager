@@ -22,7 +22,7 @@ final class AssistantViewModel: ObservableObject {
     @Published private(set) var assistantStatus: String?
     @Published private(set) var isGenerating = false
 
-    func insights(for items: [Item]) -> [AssistantInsight] {
+    func insights(for items: [Item], orders: [CafeOrder]) -> [AssistantInsight] {
         guard !items.isEmpty else {
             return []
         }
@@ -69,6 +69,35 @@ final class AssistantViewModel: ObservableObject {
             )
         }
 
+        let recentDemand = recentDemandByItemID(from: orders)
+        let highDemandLowStockItems = lowStockItems
+            .filter { recentDemand[$0.id, default: 0] > 0 }
+            .sorted { recentDemand[$0.id, default: 0] > recentDemand[$1.id, default: 0] }
+
+        if let demandRisk = highDemandLowStockItems.first {
+            let recentOrders = recentDemand[demandRisk.id, default: 0]
+            results.append(
+                AssistantInsight(
+                    id: "demand-risk-\(demandRisk.id)",
+                    title: "Selling now, running low",
+                    message: "\(demandRisk.name) sold \(recentOrders) time\(recentOrders == 1 ? "" : "s") recently and is already near its stock limit.",
+                    severity: .critical
+                )
+            )
+        }
+
+        let slowMovingItems = slowMovingItems(from: items, orders: orders)
+        if let slowMovingItem = slowMovingItems.first {
+            results.append(
+                AssistantInsight(
+                    id: "slow-moving-\(slowMovingItem.id)",
+                    title: "Slow-moving stock",
+                    message: "\(slowMovingItem.name) has \(slowMovingItem.quantity) units on hand and no recent orders. Pause reordering or feature it in a promotion.",
+                    severity: .info
+                )
+            )
+        }
+
         if !invalidThresholdItems.isEmpty {
             let names = invalidThresholdItems.map(\.name).joined(separator: ", ")
             results.append(
@@ -88,8 +117,39 @@ final class AssistantViewModel: ObservableObject {
         max(item.threshold - item.quantity, 0)
     }
 
+    private func recentDemandByItemID(from orders: [CafeOrder]) -> [String: Int] {
+        let calendar = Calendar.current
+        let cutoffDate = calendar.date(byAdding: .day, value: -1, to: Date()) ?? .distantPast
+        let recentOrders = orders.filter { $0.createdAt >= cutoffDate }
+
+        var demandByItemID: [String: Int] = [:]
+        for order in recentOrders {
+            for item in order.items {
+                demandByItemID[item.itemID, default: 0] += item.quantity
+            }
+        }
+
+        return demandByItemID
+    }
+
+    private func slowMovingItems(from items: [Item], orders: [CafeOrder]) -> [Item] {
+        let calendar = Calendar.current
+        let cutoffDate = calendar.date(byAdding: .day, value: -7, to: Date()) ?? .distantPast
+        let activeItemIDs = Set(
+            orders
+                .filter { $0.createdAt >= cutoffDate }
+                .flatMap(\.items)
+                .map(\.itemID)
+        )
+
+        return items
+            .filter { !activeItemIDs.contains($0.id) }
+            .filter { $0.quantity >= max($0.threshold * 3, 10) }
+            .sorted { $0.quantity > $1.quantity }
+    }
+
     @MainActor
-    func refreshBriefing(for items: [Item]) async {
+    func refreshBriefing(for items: [Item], orders: [CafeOrder]) async {
         guard !items.isEmpty else {
             aiBriefing = nil
             assistantStatus = nil
@@ -102,7 +162,7 @@ final class AssistantViewModel: ObservableObject {
             let model = SystemLanguageModel.default
             switch model.availability {
             case .available:
-                await generateBriefing(for: items)
+                await generateBriefing(for: items, orders: orders)
             case .unavailable(let reason):
                 aiBriefing = nil
                 assistantStatus = statusMessage(for: reason)
@@ -123,17 +183,17 @@ final class AssistantViewModel: ObservableObject {
 #if canImport(FoundationModels)
 @available(iOS 26.0, macOS 26.0, *)
 private extension AssistantViewModel {
-    func generateBriefing(for items: [Item]) async {
+    func generateBriefing(for items: [Item], orders: [CafeOrder]) async {
         isGenerating = true
         assistantStatus = nil
 
-        let prompt = inventoryPrompt(for: items)
+        let prompt = inventoryPrompt(for: items, orders: orders)
         let session = LanguageModelSession(
             model: .default,
             instructions: """
             You are an operations assistant for a cafe manager.
             Review inventory data and produce a short action briefing.
-            Focus on what needs attention first, what can be bundled into one supplier run, and any configuration issues.
+            Focus on what needs attention first, what can be bundled into one supplier run, what is actively selling, and what stock appears slow-moving.
             Do not invent sales rates, dates, supplier names, or missing facts.
             Keep the response under 90 words and use plain English.
             """
@@ -153,11 +213,20 @@ private extension AssistantViewModel {
         isGenerating = false
     }
 
-    func inventoryPrompt(for items: [Item]) -> String {
+    func inventoryPrompt(for items: [Item], orders: [CafeOrder]) -> String {
         let lines = items
             .sorted { stockGap(for: $0) > stockGap(for: $1) }
             .map { item in
                 "\(item.name): quantity \(item.quantity), threshold \(item.threshold)"
+            }
+            .joined(separator: "\n")
+        let demandByItemID = recentDemandByItemID(from: orders)
+        let recentDemandLines = items
+            .filter { demandByItemID[$0.id, default: 0] > 0 }
+            .sorted { demandByItemID[$0.id, default: 0] > demandByItemID[$1.id, default: 0] }
+            .prefix(5)
+            .map { item in
+                "\(item.name): \(demandByItemID[item.id, default: 0]) ordered in the last 24 hours"
             }
             .joined(separator: "\n")
 
@@ -165,6 +234,8 @@ private extension AssistantViewModel {
         Build an inventory briefing for this cafe.
         Inventory records:
         \(lines)
+        Recent order signals:
+        \(recentDemandLines.isEmpty ? "No recent orders recorded." : recentDemandLines)
         """
     }
 
@@ -195,4 +266,3 @@ private extension AssistantViewModel {
     }
 }
 #endif
-

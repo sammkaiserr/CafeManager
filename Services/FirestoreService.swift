@@ -215,4 +215,28 @@ final class FirestoreService {
                 completion(.success(orders))
             }
     }
+
+    func deleteOrder(
+        _ order: CafeOrder,
+        restoredItems: [Item],
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+        let batch = db.batch()
+        let orderReference = db.collection("orders").document(order.id)
+        batch.deleteDocument(orderReference)
+
+        for item in restoredItems {
+            let itemReference = db.collection("items").document(item.id)
+            batch.setData(itemData(for: item), forDocument: itemReference)
+        }
+
+        batch.commit { error in
+            if let error {
+                completion(.failure(error))
+                return
+            }
+
+            completion(.success(()))
+        }
+    }
 }
