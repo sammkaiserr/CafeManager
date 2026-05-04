@@ -1,95 +1,170 @@
 # CafeManager
 
-CafeManager is a SwiftUI inventory app for a small cafe manager who needs a simple way to track stock, update records, and spot issues before they become urgent.
+CafeManager is a SwiftUI app for running day-to-day cafe operations. It helps a cafe manager take customer orders, manage inventory, monitor stock risk, and keep data synced with Firebase Firestore.
 
-## Project Brief
+## Overview
 
-The app is designed around a practical cafe workflow:
+The app is built around a practical cafe workflow:
+
+- start from a cafe dashboard,
+- move into order taking during service,
+- manage and restock inventory,
+- use smart assistant insights to catch stock problems early.
+
+## Current Features
+
+### App Navigation
+
+- Sidebar-based navigation.
+- Default landing screen is a `Cafe Manager` overview page.
+- Main sections:
+  - `Take Order`
+  - `Inventory`
+
+### Cafe Manager Home
+
+- Quick entry points into `Take Order` and `Inventory`.
+- At-a-glance summary for:
+  - active orders,
+  - low-stock items,
+  - total inventory items.
+
+### Take Order Flow
+
+- Create a new order from the `Take Order` page.
+- Select a table number for new orders.
+- See menu items one by one with:
+  - food item name,
+  - minus button,
+  - quantity in the middle,
+  - plus button.
+- Complete the order from the bottom action bar.
+- Prevent ordering more than available stock.
+- Save orders to Firestore.
+- Reduce inventory automatically when an order is completed.
+
+### Order Management
+
+- Recent orders are displayed in the `Take Order` page.
+- Reopen an existing order using `Order More`.
+- `Order More` keeps the same table locked and lets the staff add additional items.
+- Additional items merge into the same order record instead of creating a duplicate order.
+- Delete an order with confirmation.
+- Deleting an order restores its item quantities back into inventory.
+
+### Inventory Management
 
 - Add inventory items.
-- View all items in one place.
-- Edit existing records.
-- Delete items that are no longer needed.
-- Surface low-stock and out-of-stock risks early.
+- View all inventory in one place.
+- Edit existing inventory items.
+- Delete inventory items.
+- Highlight low-stock items when quantity is at or below the threshold.
 
-## Features
+### Smart Assistant
 
-- Full CRUD for cafe inventory items.
-- Firebase Firestore persistence.
-- SwiftUI interface with loading, empty, and error states.
-- Smart assistant panel that prioritizes:
-  - out-of-stock items,
-  - low-stock items below their threshold,
-  - grouped reorder opportunities,
-  - records with missing or invalid threshold setup.
+The inventory page includes a smart assistant that uses both stock data and recent order activity.
+
+It currently provides:
+
+- urgent out-of-stock alerts,
+- next restock priority recommendations,
+- grouped reorder suggestions,
+- invalid threshold warnings,
+- low-stock items that are also actively selling,
+- slow-moving stock with high quantity and no recent demand.
+
+The assistant also supports an on-device AI inventory briefing using Apple Foundation Models when available. If Apple Intelligence is unavailable, the app falls back gracefully to rule-based insights.
 
 ## Data Model
 
-Each inventory item stores:
+### Inventory Item
+
+Each item stores:
 
 - `id`
 - `name`
 - `quantity`
 - `threshold`
 
-The app currently focuses on inventory management because that is the most direct way to satisfy the cafe manager's daily needs with a clean and understandable flow.
+### Order
+
+Each order stores:
+
+- `id`
+- `tableNumber`
+- `createdAt`
+- ordered items with item id, item name, and quantity
 
 ## Architecture
 
-The project follows a lightweight MVVM structure:
+The project follows a lightweight MVVM-style separation:
 
 - `Views/`
-  SwiftUI screens for listing, adding, editing, and showing assistant insights.
+  SwiftUI screens for dashboard, ordering, inventory, and assistant UI.
 - `ViewModels/`
-  Business logic for assistant recommendations.
+  Assistant logic and smart inventory analysis.
 - `Services/`
-  Firestore integration and persistence logic.
+  Firestore persistence and batch inventory/order updates.
 - `models/`
-  Shared domain model types.
+  Shared data types for inventory items, orders, and order selections.
 
 ## Firebase Integration
 
-Firebase is configured through `GoogleService-Info.plist`, and inventory data is persisted in Firestore.
+Firebase is configured with `GoogleService-Info.plist`.
 
-Current Firestore operations:
+Firestore is used for:
+
+- storing inventory items,
+- storing customer orders,
+- updating stock after order completion,
+- restoring stock when orders are deleted.
+
+Current Firestore operations include:
 
 - create item
 - fetch items
 - update item
 - delete item
-
-## Smart Feature
-
-Instead of using fake sales-per-day predictions, the assistant uses real inventory data to help the manager act faster. It identifies what needs attention first, which items should be reordered together, and where stock thresholds are missing or misconfigured.
-
-This keeps the feature useful without inventing demand numbers the app cannot justify.
+- create or update order
+- fetch orders
+- delete order
 
 ## Error Handling
 
-The app includes defensive handling for common failure cases:
+The app includes defensive behavior across the main flows:
 
-- empty item names are rejected,
+- empty names are rejected,
 - invalid numeric input is rejected,
-- Firestore fetch/write/delete failures surface an error message,
-- loading and empty states are shown in the main inventory screen.
+- empty orders cannot be completed,
+- ordering is blocked when stock is insufficient,
+- order deletion confirms before removing data,
+- Firestore failures surface error messages,
+- loading and empty states are shown in key screens.
+
+## Platform Notes
+
+- Built with SwiftUI.
+- Uses Firebase Firestore for persistence.
+- Supports Apple Foundation Models for the AI inventory briefing when the device and OS support it.
 
 ## Running the Project
 
 1. Open `CafeManager.xcodeproj` in Xcode.
-2. Make sure the Firebase configuration file is present.
-3. Build and run on an iOS simulator or device.
+2. Ensure `GoogleService-Info.plist` is present and valid.
+3. Build and run on a simulator or device.
 
-## Current Status Against the Brief
+## Status Against the Brief
 
-- Full CRUD: implemented
+- Full CRUD: implemented for inventory items
 - Firebase Integration: implemented with Firestore
-- Clean Architecture: implemented with separate views, view model, model, and service layers
-- Error Handling: implemented for empty input, invalid values, empty states, loading states, and network failures
-- AI/Smart Feature: implemented as an inventory prioritization assistant based on real stock data
+- AI Feature: implemented through smart inventory insights and optional on-device AI briefing
+- Clean Architecture: implemented with separated views, service layer, model layer, and assistant view model
+- Error Handling: implemented across inventory, ordering, loading, and Firestore failure states
 
 ## Future Improvements
 
-- Firebase Authentication for manager login
-- Supplier tracking and payable balances
-- Order history and purchase records
-- Analytics backed by real sales data for stronger forecasting
+- Firebase Authentication for staff login
+- Supplier management and payable tracking
+- Order status lifecycle such as open, served, paid, and closed
+- Real sales analytics and stronger demand forecasting
+- Dedicated menu model separate from raw inventory items
