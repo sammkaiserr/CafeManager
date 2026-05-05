@@ -31,6 +31,7 @@ struct ContentView: View {
     @State private var orderPendingDeletion: CafeOrder?
     @State private var selectedItem: Item?
     @State private var selectedSection: AppSection?
+    @State private var showScrollToTopButton = false
 
     let service = FirestoreService()
 
@@ -167,91 +168,124 @@ struct ContentView: View {
 
     private var takeOrderContent: some View {
         NavigationStack {
-            Group {
+            ScrollViewReader { proxy in
+                Group {
                 if isLoading && items.isEmpty {
                     ProgressView("Loading menu...")
                 } else if items.isEmpty {
-                    ContentUnavailableView(
-                        "No menu items yet",
+                    legacyEmptyState(
+                        title: "No menu items yet",
                         systemImage: "takeoutbag.and.cup.and.straw",
-                        description: Text("Add inventory items first, then start taking orders.")
+                        message: "Add inventory items first, then start taking orders."
                     )
                 } else {
-                    ScrollView {
-                        LazyVStack(alignment: .leading, spacing: 16) {
-                            if let errorMessage {
+                        ScrollView {
+                            GeometryReader { geometry in
+                                Color.clear
+                                    .preference(
+                                        key: TakeOrderScrollOffsetPreferenceKey.self,
+                                        value: geometry.frame(in: .named("takeOrderScroll")).minY
+                                    )
+                            }
+                            .frame(height: 0)
+                            .id("takeOrderTop")
+
+                            LazyVStack(alignment: .leading, spacing: 16) {
+                                if let errorMessage {
+                                    pageSectionCard {
+                                        Text(errorMessage)
+                                            .foregroundColor(.red)
+                                    }
+                                }
+
                                 pageSectionCard {
-                                    Text(errorMessage)
-                                        .foregroundColor(.red)
+                                    Button {
+                                        activeOrder = nil
+                                        takeOrderTableNumber = 1
+                                        showTakeOrderSheet = true
+                                    } label: {
+                                        Label("Take Order", systemImage: "takeoutbag.and.cup.and.straw.fill")
+                                            .font(.headline)
+                                            .frame(maxWidth: .infinity)
+                                    }
+                                    .buttonStyle(.borderedProminent)
                                 }
-                            }
 
-                            pageSectionCard {
-                                Button {
-                                    activeOrder = nil
-                                    takeOrderTableNumber = 1
-                                    showTakeOrderSheet = true
-                                } label: {
-                                    Label("Take Order", systemImage: "takeoutbag.and.cup.and.straw.fill")
-                                        .font(.headline)
-                                        .frame(maxWidth: .infinity)
-                                }
-                                .buttonStyle(.borderedProminent)
-                            }
+                                pageSectionCard(title: "Recent Orders") {
+                                    if isLoadingOrders {
+                                        ProgressView("Loading orders...")
+                                    } else if orders.isEmpty {
+                                        Text("Completed orders will appear here.")
+                                            .foregroundColor(.secondary)
+                                    } else {
+                                        ForEach(orders) { order in
+                                            VStack(alignment: .leading, spacing: 8) {
+                                                HStack {
+                                                    Text("Table \(order.tableNumber)")
+                                                        .font(.headline)
 
-                            pageSectionCard(title: "Recent Orders") {
-                                if isLoadingOrders {
-                                    ProgressView("Loading orders...")
-                                } else if orders.isEmpty {
-                                    Text("Completed orders will appear here.")
-                                        .foregroundColor(.secondary)
-                                } else {
-                                    ForEach(orders) { order in
-                                        VStack(alignment: .leading, spacing: 8) {
-                                            HStack {
-                                                Text("Table \(order.tableNumber)")
-                                                    .font(.headline)
+                                                    Spacer()
 
-                                                Spacer()
+                                                    Text(order.createdAt.formatted(date: .omitted, time: .shortened))
+                                                        .font(.caption)
+                                                        .foregroundColor(.secondary)
+                                                }
 
-                                                Text(order.createdAt.formatted(date: .omitted, time: .shortened))
+                                                Text(order.items.map { "\($0.name) x\($0.quantity)" }.joined(separator: ", "))
+                                                    .font(.subheadline)
+                                                    .foregroundColor(.secondary)
+
+                                                Text("\(order.totalItems) item\(order.totalItems == 1 ? "" : "s")")
                                                     .font(.caption)
                                                     .foregroundColor(.secondary)
+
+                                                Button("Order More") {
+                                                    activeOrder = order
+                                                    takeOrderTableNumber = order.tableNumber
+                                                    showTakeOrderSheet = true
+                                                }
+                                                .font(.subheadline.weight(.semibold))
+
+                                                Button("Delete Order", role: .destructive) {
+                                                    orderPendingDeletion = order
+                                                }
+                                                .font(.subheadline.weight(.semibold))
                                             }
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .padding(.vertical, 4)
 
-                                            Text(order.items.map { "\($0.name) x\($0.quantity)" }.joined(separator: ", "))
-                                                .font(.subheadline)
-                                                .foregroundColor(.secondary)
-
-                                            Text("\(order.totalItems) item\(order.totalItems == 1 ? "" : "s")")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-
-                                            Button("Order More") {
-                                                activeOrder = order
-                                                takeOrderTableNumber = order.tableNumber
-                                                showTakeOrderSheet = true
+                                            if order.id != orders.last?.id {
+                                                Divider()
                                             }
-                                            .font(.subheadline.weight(.semibold))
-
-                                            Button("Delete Order", role: .destructive) {
-                                                orderPendingDeletion = order
-                                            }
-                                            .font(.subheadline.weight(.semibold))
-                                        }
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(.vertical, 4)
-
-                                        if order.id != orders.last?.id {
-                                            Divider()
                                         }
                                     }
                                 }
                             }
+                            .padding(.horizontal)
+                            .padding(.top, 12)
+                            .padding(.bottom, 24)
                         }
-                        .padding(.horizontal)
-                        .padding(.top, 12)
-                        .padding(.bottom, 24)
+                        .coordinateSpace(name: "takeOrderScroll")
+                        .onPreferenceChange(TakeOrderScrollOffsetPreferenceKey.self) { offset in
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                showScrollToTopButton = offset < -180
+                            }
+                        }
+                    }
+                }
+                .overlay(alignment: .bottomTrailing) {
+                    if showScrollToTopButton {
+                        Button {
+                            withAnimation(.easeInOut) {
+                                proxy.scrollTo("takeOrderTop", anchor: .top)
+                            }
+                        } label: {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.system(size: 36))
+                                .symbolRenderingMode(.hierarchical)
+                        }
+                        .padding(.trailing, 20)
+                        .padding(.bottom, 20)
                     }
                 }
             }
@@ -265,10 +299,10 @@ struct ContentView: View {
                 if isLoading && items.isEmpty {
                     ProgressView("Loading inventory...")
                 } else if items.isEmpty {
-                    ContentUnavailableView(
-                        "No inventory yet",
+                    legacyEmptyState(
+                        title: "No inventory yet",
                         systemImage: "shippingbox",
-                        description: Text("Add your first item to start tracking stock.")
+                        message: "Add your first item to start tracking stock."
                     )
                 } else {
                     List {
@@ -504,5 +538,29 @@ struct ContentView: View {
             RoundedRectangle(cornerRadius: 14)
                 .stroke(Color(.systemGray5), lineWidth: 1)
         )
+    }
+
+    private func legacyEmptyState(title: String, systemImage: String, message: String) -> some View {
+        VStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .font(.system(size: 40))
+                .foregroundColor(.secondary)
+            Text(title)
+                .font(.title3.weight(.semibold))
+            Text(message)
+                .font(.body)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(24)
+    }
+}
+
+private struct TakeOrderScrollOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
